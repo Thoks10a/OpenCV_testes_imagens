@@ -8,13 +8,12 @@ import win32con
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-def windows_capture():
+def window_capture():
     w = 1680 # set this
     h = 1050 # set this
     bmpfilenamename = "out.bmp" #set this
 
-    # hwnd = win32gui.FindWindow(None, windowname)
-    hwnd = None
+    hwnd = win32gui.FindWindow(None, 'Albion Online Client')
     wDC = win32gui.GetWindowDC(hwnd)
     dcObj=win32ui.CreateDCFromHandle(wDC)
     cDC=dcObj.CreateCompatibleDC()
@@ -22,21 +21,32 @@ def windows_capture():
     dataBitMap.CreateCompatibleBitmap(dcObj, w, h)
     cDC.SelectObject(dataBitMap)
     cDC.BitBlt((0,0),(w, h) , dcObj, (0,0), win32con.SRCCOPY)
-    dataBitMap.SaveBitmapFile(cDC, bmpfilenamename)
+    
+    # dataBitMap.SaveBitmapFile(cDC, bmpfilenamename)
+    signedIntsArray = dataBitMap.GetBitmapBits(True)
+    img = np.fromstring(signedIntsArray, dtype = "uint8")
+    img.shape = (h, w,4)
 
     # Free Resources
     dcObj.DeleteDC()
     cDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, wDC)
     win32gui.DeleteObject(dataBitMap.GetHandle()) 
+    
+    img = img[...,:3]
+    
+    img = np.ascontiguousarray(img)
+    
+    
+    return img
 
 loop_time = time()
 
 while True:
     
-    screenshot = ImageGrab.grab()
-    screenshot = np.array(screenshot)
-    screenshot = cv.cvtColor(screenshot, cv.COLOR_RGB2BGR)
+    screenshot = window_capture()
+    # screenshot = np.array(screenshot)
+    # screenshot = cv.cvtColor(screenshot, cv.COLOR_RGB2BGR)
     # screenshot = screenshot[:, :, ::-1].copy()
     
     cv.imshow('Computer Vision ', screenshot)
